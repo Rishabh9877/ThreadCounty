@@ -138,8 +138,8 @@ export function AIChatbot() {
               </Button>
             </div>
 
-            {/* Messages Area - Changed to standard div to fix scrolling */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-primary/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-primary/40">
               <div className="space-y-4">
                 {messages.map((msg) => (
                   <div

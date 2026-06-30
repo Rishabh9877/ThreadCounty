@@ -30,9 +30,17 @@ export async function POST(req: Request) {
       systemInstruction: "You are the ThreadCounty AI Assistant. You help users understand fabric analysis, upload best practices, pricing, and account issues. Be concise, helpful, and polite. Always format your responses clearly."
     });
 
-    // Format chat history for Gemini
-    const history = messages.slice(0, -1).map((msg: any) => ({
-      role: msg.role === "assistant" ? "model" : "user",
+    // Format chat history for Gemini. 
+    // Gemini requires history to start with a 'user' message and alternate.
+    // We filter out the hardcoded initial 'welcome' assistant message if it's the first one.
+    const historyMessages = messages.slice(0, -1).filter((msg: any, index: number) => {
+      // If the very first message in the array is an assistant message (like the welcome), skip it
+      if (index === 0 && msg.role !== "user") return false;
+      return true;
+    });
+
+    const history = historyMessages.map((msg: any) => ({
+      role: msg.role === "user" ? "user" : "model",
       parts: [{ text: msg.content }],
     }));
 
