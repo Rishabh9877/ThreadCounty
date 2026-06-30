@@ -25,7 +25,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      systemInstruction: "You are the ThreadCounty AI Assistant. You help users understand fabric analysis, upload best practices, pricing, and account issues. Be concise, helpful, and polite. Always format your responses clearly."
+    });
 
     // Format chat history for Gemini
     const history = messages.slice(0, -1).map((msg: any) => ({
@@ -37,17 +40,16 @@ export async function POST(req: Request) {
 
     const chatSession = model.startChat({
       history,
-      systemInstruction: "You are the ThreadCounty AI Assistant. You help users understand fabric analysis, upload best practices, pricing, and account issues. Be concise, helpful, and polite. Always format your responses clearly."
     });
 
     const result = await chatSession.sendMessage(lastMessage);
     const text = result.response.text();
 
     return NextResponse.json({ text });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Chat API Error:", error);
     return NextResponse.json(
-      { error: "Failed to generate response" },
+      { error: "Failed to generate response: " + error.message },
       { status: 500 }
     );
   }

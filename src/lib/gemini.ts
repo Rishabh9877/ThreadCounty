@@ -36,8 +36,8 @@ export async function analyzeFabricImage(imageUrl: string): Promise<FabricAnalys
     if (imageUrl.toLowerCase().endsWith(".png")) mimeType = "image/png";
     if (imageUrl.toLowerCase().endsWith(".webp")) mimeType = "image/webp";
 
-    // 2. Initialize Gemini Model (Using gemini-1.5-flash for speed and vision capabilities)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // 2. Initialize Gemini Model (Using gemini-2.5-flash for speed and vision capabilities)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // 3. Define the prompt expecting JSON output
     const prompt = `You are an expert AI fabric analyzer. Analyze this microscopic or macro fabric image.
