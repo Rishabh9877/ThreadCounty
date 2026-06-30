@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🧵 ThreadCounty
 
-## Getting Started
+> **AI-Powered Textile Intelligence Platform**
+> 
+> Analyze fabric thread density, classify weave patterns, and generate automated quality control reports with industry-grade precision and a state-of-the-art interactive experience.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Live Demo & Deployment
+Deployed on Vercel: [threadcounty.vercel.app](https://threadcounty.vercel.app) *(Replace with your live URL)*
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🌟 Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+*   **Apple-Inspired 3D Scrollytelling**: A highly optimized particle scene that morphs a single fiber into woven fabric, then zooms into microscopic warp/weft structures, and resolves into an AI brain. Offloaded entirely to GPU Custom Shaders (`ShaderMaterial`) to guarantee a locked 60 FPS scrolling experience.
+*   **AI-Powered Fabric Classification**: Upload fabric images to run computer vision models measuring thread density and identifying weave types (Cotton, Denim, Twill, Satin, Linen) with precision metrics.
+*   **Comprehensive QC Dashboard**: A central interface to track scanned history, compare scans side-by-side, analyze thread count progression graphs, and download detailed PDF quality reports.
+*   **Mobile Optimized**: Device-aware rendering completely bypasses heavy WebGL rendering on mobile displays to preserve battery life, falling back to rich CSS animations while preserving a high-performance experience on desktops.
+*   **Database & Secure Auth**: Fully structured backend powered by Supabase PostgreSQL and Prisma ORM, utilizing secure Row Level Security (RLS) and persistent session authentication.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Technology Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+*   **Core Framework**: Next.js 14 (App Router) + React
+*   **3D Graphics**: Three.js, React Three Fiber, Custom GLSL Vertex/Fragment Shaders
+*   **Animations**: GSAP (GreenSock), Framer Motion, Lenis (Smooth Scroll)
+*   **Styling**: Tailwind CSS + Shadcn UI + Vanilla CSS (Glassmorphism)
+*   **Database & ORM**: Prisma Client + Supabase (PostgreSQL)
+*   **Auth & Storage**: Supabase Auth + Supabase Storage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 💻 Getting Started
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 📋 Prerequisites
+Ensure you have the following installed:
+*   [Node.js](https://nodejs.org/) (v18.x or higher)
+*   [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+*   A [Supabase](https://supabase.com/) Account (Free tier is perfect)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### ⚙️ Installation & Setup
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-username/threadcounty.git
+    cd threadcounty
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+3.  **Configure Environment Variables**:
+    Create a `.env` file in the root directory and populate it with your Supabase credentials:
+    ```env
+    # Supabase Connection (Prisma)
+    DATABASE_URL="your-supabase-postgres-connection-string"
+    DIRECT_URL="your-supabase-postgres-direct-connection-string"
+
+    # Supabase Client Authentication
+    NEXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
+    NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+    ```
+
+4.  **Sync your Database Schema**:
+    Push the Prisma schema to your Supabase instance:
+    ```bash
+    npx prisma db push
+    ```
+
+5.  **Run the local development server**:
+    ```bash
+    npm run dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+---
+
+## 🏗️ Production Deployment
+
+This project is fully ready for deployment on **Vercel**:
+
+1.  Connect your GitHub repository to Vercel.
+2.  Import your environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`) under the Project Settings.
+3.  Vercel will build and deploy the app automatically!
