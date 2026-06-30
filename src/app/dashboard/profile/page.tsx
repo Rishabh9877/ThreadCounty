@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -32,14 +32,15 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSupabase } from "@/providers/SupabaseProvider";
 import { toast } from "sonner";
+import { getSecurityLogs, logSecurityAction } from "@/app/actions/profile";
 
-const securityLog = [
-  { action: "Password changed", ip: "192.168.1.42", date: "2026-06-28 14:23" },
-  { action: "Login from Chrome/Mac", ip: "192.168.1.42", date: "2026-06-28 10:05" },
-  { action: "Login from Safari/iOS", ip: "10.0.0.15", date: "2026-06-27 08:30" },
-  { action: "Profile updated", ip: "192.168.1.42", date: "2026-06-26 16:45" },
-  { action: "Account created", ip: "192.168.1.42", date: "2026-06-20 09:00" },
-];
+interface SecurityLogEntry {
+  id: string;
+  action: string;
+  ip: string;
+  device: string;
+  date: string;
+}
 
 export default function ProfilePage() {
   const { user, supabase } = useSupabase();
@@ -53,6 +54,21 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [profileImage, setProfileImage] = useState(user?.user_metadata?.avatar_url || "");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+
+  const [securityLogData, setSecurityLogData] = useState<SecurityLogEntry[]>([]);
+
+  const loadSecurityLogs = async () => {
+    try {
+      const logs = await getSecurityLogs();
+      setSecurityLogData(logs.map((l: any) => ({ ...l, date: new Date(l.date).toLocaleString() })));
+    } catch (err) {
+      console.error("Failed to load security logs", err);
+    }
+  };
+
+  useEffect(() => {
+    loadSecurityLogs();
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,6 +115,8 @@ export default function ProfilePage() {
       });
       if (error) throw error;
       toast.success("Profile updated successfully!");
+      await logSecurityAction("Profile updated");
+      loadSecurityLogs();
     } catch (error: any) {
       toast.error(error.message || "An error occurred");
     } finally {
@@ -126,6 +144,8 @@ export default function ProfilePage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      await logSecurityAction("Password changed");
+      loadSecurityLogs();
     } catch (error: any) {
       toast.error(error.message || "Failed to change password");
     } finally {
@@ -274,15 +294,18 @@ export default function ProfilePage() {
             </h2>
             <Separator className="mb-4" />
             <div className="space-y-3">
-              {securityLog.map((log, i) => (
+              {securityLogData.length === 0 && (
+                <p className="text-sm text-muted-foreground py-2">No recent security activity found.</p>
+              )}
+              {securityLogData.map((log) => (
                 <div
-                  key={i}
+                  key={log.id}
                   className="flex items-center justify-between py-2 border-b border-border last:border-0"
                 >
                   <div>
                     <p className="text-sm font-medium">{log.action}</p>
                     <p className="text-xs text-muted-foreground">
-                      IP: {log.ip}
+                      IP: {log.ip} | Device: {log.device}
                     </p>
                   </div>
                   <span className="text-xs text-muted-foreground">

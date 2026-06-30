@@ -28,6 +28,7 @@ model User {
   reports       Report[]
   subscriptions Subscription[]
   notifications Notification[]
+  securityLogs  SecurityLog[]
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -110,6 +111,18 @@ model Notification {
   title     String
   message   String
   read      Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+}
+
+model SecurityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  action    String
+  ipAddress String?
+  userAgent String?
   
   createdAt DateTime @default(now())
 }

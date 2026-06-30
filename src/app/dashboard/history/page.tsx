@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { getUserHistory } from "@/app/actions/history";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -38,19 +39,6 @@ interface HistoryItem {
   status: "completed" | "processing" | "failed";
 }
 
-const mockHistory: HistoryItem[] = [
-  { id: "a1b2c3d4", fileName: "Cotton-Blend-Sample-A.jpg", fabricType: "Cotton", threadDensity: 186, confidence: 97.2, uploadDate: "2026-06-28", status: "completed" },
-  { id: "e5f6g7h8", fileName: "Denim-Production-Batch-12.png", fabricType: "Denim", threadDensity: 234, confidence: 95.8, uploadDate: "2026-06-27", status: "completed" },
-  { id: "i9j0k1l2", fileName: "Twill-Weave-QC-Check.jpg", fabricType: "Twill", threadDensity: 178, confidence: 98.1, uploadDate: "2026-06-27", status: "completed" },
-  { id: "m3n4o5p6", fileName: "Satin-Weave-Premium.png", fabricType: "Satin", threadDensity: 289, confidence: 96.4, uploadDate: "2026-06-26", status: "completed" },
-  { id: "q7r8s9t0", fileName: "Linen-Natural-Fiber.jpg", fabricType: "Linen", threadDensity: 142, confidence: 94.7, uploadDate: "2026-06-25", status: "completed" },
-  { id: "u1v2w3x4", fileName: "Cotton-Jersey-Knit.jpg", fabricType: "Cotton", threadDensity: 156, confidence: 97.9, uploadDate: "2026-06-24", status: "completed" },
-  { id: "y5z6a7b8", fileName: "Silk-Charmeuse-Test.png", fabricType: "Satin", threadDensity: 274, confidence: 93.2, uploadDate: "2026-06-23", status: "completed" },
-  { id: "c9d0e1f2", fileName: "Denim-Selvedge-Raw.jpg", fabricType: "Denim", threadDensity: 218, confidence: 96.1, uploadDate: "2026-06-22", status: "completed" },
-  { id: "g3h4i5j6", fileName: "Twill-Herringbone.png", fabricType: "Twill", threadDensity: 192, confidence: 98.7, uploadDate: "2026-06-21", status: "completed" },
-  { id: "k7l8m9n0", fileName: "Processing-Sample.jpg", fabricType: "Cotton", threadDensity: 0, confidence: 0, uploadDate: "2026-06-28", status: "processing" },
-];
-
 const ITEMS_PER_PAGE = 5;
 
 export default function HistoryPage() {
@@ -58,9 +46,35 @@ export default function HistoryPage() {
   const [sortField, setSortField] = useState<keyof HistoryItem>("uploadDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const data = await getUserHistory();
+        const formattedData = data.map((d) => ({
+          id: d.id,
+          fileName: d.fileName,
+          fabricType: d.fabricType,
+          threadDensity: 0, // Should come from DB
+          confidence: parseFloat(d.accuracy) || 0,
+          uploadDate: new Date(d.date).toLocaleDateString(),
+          status: (d.status.toLowerCase() as "completed" | "processing" | "failed"),
+        }));
+        setHistoryData(formattedData);
+      } catch (error) {
+        console.error("Failed to fetch history:", error);
+        toast.error("Could not load history data");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const filteredHistory = useMemo(() => {
-    let filtered = mockHistory.filter(
+    let filtered = historyData.filter(
       (item) =>
         item.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.fabricType.toLowerCase().includes(searchQuery.toLowerCase())
@@ -80,7 +94,7 @@ export default function HistoryPage() {
     });
 
     return filtered;
-  }, [searchQuery, sortField, sortDir]);
+  }, [searchQuery, sortField, sortDir, historyData]);
 
   const totalPages = Math.ceil(filteredHistory.length / ITEMS_PER_PAGE);
   const paginatedHistory = filteredHistory.slice(

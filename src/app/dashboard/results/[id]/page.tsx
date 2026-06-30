@@ -22,48 +22,44 @@ import { GradientText } from "@/components/ui/GradientText";
 import { Separator } from "@/components/ui/separator";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { toast } from "sonner";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
+import { getResultData } from "@/app/actions/results";
 
-function generateMockResults(id: string) {
-  const hash = id.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
-  const fabricTypes = ["Cotton", "Denim", "Twill", "Satin", "Linen"];
-  const threadDensity = 130 + (hash % 160);
-  const warpCount = Math.floor(threadDensity * 0.55) + (hash % 10);
-  const weftCount = threadDensity - warpCount;
-  const fabricType = fabricTypes[hash % fabricTypes.length];
-  const confidence = 85 + (hash % 14) + Math.random();
 
-  return {
-    id,
-    threadDensity,
-    warpCount,
-    weftCount,
-    fabricType,
-    confidence: Math.min(99.9, confidence),
-    uniformity: 88 + (hash % 10),
-    suggestions: [
-      {
-        type: "quality" as const,
-        text: `Thread density of ${threadDensity}/cm is ${threadDensity > 200 ? "above" : "within"} standard range for ${fabricType.toLowerCase()} fabrics. ${threadDensity > 200 ? "Consider reducing thread count for cost optimization." : "Quality meets production standards."}`,
-      },
-      {
-        type: "improvement" as const,
-        text: `Warp-to-weft ratio is ${(warpCount / weftCount).toFixed(2)}:1. For optimal ${fabricType.toLowerCase()} structure, aim for a ratio closer to ${fabricType === "Denim" ? "2:1" : "1:1"}.`,
-      },
-      {
-        type: "info" as const,
-        text: `Detected weave pattern is consistent with ${fabricType === "Twill" ? "2/1 twill" : fabricType === "Satin" ? "5-harness satin" : "plain"} weave structure. Analysis confidence is ${confidence.toFixed(1)}%.`,
-      },
-    ],
-    createdAt: new Date().toISOString(),
-    fileName: `${fabricType}-Sample-${id.substring(0, 4).toUpperCase()}.jpg`,
-  };
-}
 
 export default function ResultsPage() {
   const params = useParams();
   const id = params.id as string;
-  const results = useMemo(() => generateMockResults(id), [id]);
+  const [results, setResults] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (id) {
+      getResultData(id)
+        .then((res) => {
+          if (!res) {
+            toast.error("Analysis not found or still processing.");
+          } else {
+            setResults(res);
+          }
+        })
+        .catch(() => toast.error("Failed to load analysis data."))
+        .finally(() => setLoading(false));
+    }
+  }, [id]);
+
+  if (loading || !results) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-muted-foreground">Loading analysis results...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const handleDownloadPDF = () => {
     window.print();
@@ -280,7 +276,7 @@ export default function ResultsPage() {
             </div>
             <Separator className="mb-4" />
             <div className="space-y-4">
-              {results.suggestions.map((suggestion, i) => (
+              {results.suggestions.map((suggestion: any, i: number) => (
                 <div key={i} className="flex items-start gap-3">
                   {suggestion.type === "quality" ? (
                     <CheckCircle className="w-5 h-5 text-aurora-emerald flex-shrink-0 mt-0.5" />

@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { createUploadRecord } from "@/app/actions/upload";
 import {
   validateImageFile,
   formatFileSize,
@@ -145,10 +146,9 @@ export default function UploadPage() {
       setIsComplete(true);
       toast.success("Analysis complete! Redirecting to results...");
 
-      // TODO: Call your actual backend API to save the publicUrl and run analysis
-      const mockId = Math.random().toString(36).substring(2, 10);
+      const newId = await createUploadRecord(selectedFile.name, publicUrl, selectedFile.size);
       setTimeout(() => {
-        router.push(`/dashboard/results/${mockId}`);
+        router.push(`/dashboard/results/${newId}`);
       }, 1500);
 
     } catch (err: any) {

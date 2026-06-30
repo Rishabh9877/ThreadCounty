@@ -16,11 +16,10 @@ attribute vec3 posAI;
 
 uniform float uProgress;
 uniform float uTime;
-uniform vec2 uMouse;
+uniform float uPixelRatio;
 uniform float uScale;
 
 varying vec3 vColor;
-varying float vDistanceToMouse;
 
 void main() {
   vColor = color;
@@ -56,31 +55,18 @@ void main() {
   vec4 mvPosition = modelViewMatrix * vec4(currentPos, 1.0);
   vec4 projPos = projectionMatrix * mvPosition;
   
-  // --- INTERACTIVE HOVER (Color Only) ---
-  vec2 ndcPos = projPos.xy / projPos.w;
-  float dist = distance(ndcPos, uMouse);
-  // Optional: correct for aspect ratio if needed, but simple distance is fine
-  vDistanceToMouse = dist;
-  
-  // Exact size math used by original PointsMaterial
-  gl_PointSize = 0.12 * (uScale / -mvPosition.z);
+  // Multiply by uPixelRatio for crisp rendering on Retina displays
+  gl_PointSize = 0.12 * uPixelRatio * (uScale / -mvPosition.z);
   gl_Position = projPos;
 }
 `;
 
 const fragmentShader = `
 varying vec3 vColor;
-varying float vDistanceToMouse;
 
 void main() {
   // We remove the circle discard and smoothstep to restore the original crisp square particles
   vec3 finalColor = vColor;
-  
-  // Reveal another dimension: particles turn bright white/gold when hovered
-  if (vDistanceToMouse < 0.25) {
-    float hoverIntensity = (0.25 - vDistanceToMouse) / 0.25;
-    finalColor = mix(vColor, vec3(1.0, 1.0, 1.0), hoverIntensity);
-  }
   
   // Flat 0.8 opacity exactly like the original PointsMaterial
   gl_FragColor = vec4(finalColor, 0.8);
@@ -91,7 +77,7 @@ void main() {
 `;
 
 export function LandingScene({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const { camera, size, viewport } = useThree();
+  const { camera, size, gl } = useThree();
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -164,7 +150,7 @@ export function LandingScene({ scrollYProgress }: { scrollYProgress: MotionValue
     () => ({
       uProgress: { value: 0 },
       uTime: { value: 0 },
-      uMouse: { value: new THREE.Vector2(-999, -999) },
+      uPixelRatio: { value: 1 },
       uScale: { value: 500 },
     }),
     []
@@ -180,18 +166,7 @@ export function LandingScene({ scrollYProgress }: { scrollYProgress: MotionValue
     materialRef.current.uniforms.uProgress.value = progress;
     materialRef.current.uniforms.uTime.value = time;
     materialRef.current.uniforms.uScale.value = size.height / 2.0;
-
-    // Smoothly interpolate mouse position for fluid interaction
-    materialRef.current.uniforms.uMouse.value.x = THREE.MathUtils.lerp(
-      materialRef.current.uniforms.uMouse.value.x,
-      state.pointer.x,
-      delta * 5
-    );
-    materialRef.current.uniforms.uMouse.value.y = THREE.MathUtils.lerp(
-      materialRef.current.uniforms.uMouse.value.y,
-      state.pointer.y,
-      delta * 5
-    );
+    materialRef.current.uniforms.uPixelRatio.value = gl.getPixelRatio();
 
     // Determine phase1Weight for rotation logic
     let phase1Weight = 0;

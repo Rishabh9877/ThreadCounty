@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Upload,
@@ -20,74 +21,51 @@ import { Progress } from "@/components/ui/progress";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useSupabase } from "@/providers/SupabaseProvider";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getDashboardData } from "@/app/actions/dashboard";
 
-const metrics = [
+const defaultMetrics: any[] = [
   {
     title: "Total Uploads",
-    value: "24",
-    change: "+3 this week",
+    value: "0",
+    change: "Lifetime count",
     icon: Upload,
     color: "text-neon-indigo",
     bgColor: "bg-neon-indigo/10",
+    rawStorageUsed: 0,
+    rawQuotaUsed: 0,
   },
   {
     title: "Report Accuracy",
-    value: "98.4%",
-    change: "+1.2% improvement",
+    value: "0%",
+    change: "Average confidence",
     icon: TrendingUp,
     color: "text-aurora-emerald",
     bgColor: "bg-aurora-emerald/10",
+    rawStorageUsed: 0,
+    rawQuotaUsed: 0,
   },
   {
     title: "Storage Used",
-    value: "1.2 GB",
-    change: "of 5 GB (24%)",
+    value: "0 MB",
+    change: "of 5 GB limit",
     icon: Database,
     color: "text-amber-500",
     bgColor: "bg-amber-500/10",
+    rawStorageUsed: 0,
+    rawQuotaUsed: 0,
   },
   {
     title: "API Quota",
-    value: "847",
+    value: "0",
     change: "of 1000 requests",
     icon: BarChart3,
     color: "text-cyan-500",
     bgColor: "bg-cyan-500/10",
+    rawStorageUsed: 0,
+    rawQuotaUsed: 0,
   },
 ];
 
-const recentActivity = [
-  {
-    action: "Fabric analysis completed",
-    detail: "Cotton-Blend-Sample-A.jpg",
-    time: "2 minutes ago",
-    type: "success" as const,
-  },
-  {
-    action: "PDF report generated",
-    detail: "Report #2847 — Twill Weave",
-    time: "15 minutes ago",
-    type: "info" as const,
-  },
-  {
-    action: "New image uploaded",
-    detail: "Denim-Production-Batch-12.png",
-    time: "1 hour ago",
-    type: "default" as const,
-  },
-  {
-    action: "Analysis completed",
-    detail: "Satin-Weave-QC-Check.jpg",
-    time: "3 hours ago",
-    type: "success" as const,
-  },
-  {
-    action: "Account plan upgraded",
-    detail: "Free → Student Plan",
-    time: "Yesterday",
-    type: "info" as const,
-  },
-];
 
 const quickActions = [
   {
@@ -111,7 +89,34 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
-  const { user, loading } = useSupabase();
+  const { user, loading: authLoading } = useSupabase();
+  const [metrics, setMetrics] = useState(defaultMetrics);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      getDashboardData()
+        .then((data) => {
+          // Merge icons/colors back into dynamic metrics
+          const mergedMetrics = defaultMetrics.map((dm, i) => {
+            const serverMetric = data.metrics[i];
+            return {
+              ...dm,
+              ...serverMetric,
+            };
+          });
+          setMetrics(mergedMetrics);
+          setRecentActivity(data.recentActivity);
+        })
+        .catch((err) => console.error("Failed to load dashboard data", err))
+        .finally(() => setDataLoading(false));
+    } else if (!authLoading) {
+      setDataLoading(false);
+    }
+  }, [user, authLoading]);
+
+  const loading = authLoading || dataLoading;
 
   if (loading) {
     return (
@@ -193,10 +198,10 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 {metric.title === "Storage Used" && (
-                  <Progress value={24} className="mt-3 h-1.5" />
+                  <Progress value={(metric.rawStorageUsed / 5120) * 100} className="mt-3 h-1.5" />
                 )}
                 {metric.title === "API Quota" && (
-                  <Progress value={84.7} className="mt-3 h-1.5" />
+                  <Progress value={(metric.rawQuotaUsed / 1000) * 100} className="mt-3 h-1.5" />
                 )}
               </GlassCard>
             </motion.div>
@@ -218,6 +223,9 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div className="space-y-4">
+                {recentActivity.length === 0 && !loading && (
+                  <p className="text-sm text-muted-foreground">No recent activity found.</p>
+                )}
                 {recentActivity.map((item, i) => (
                   <motion.div
                     key={i}
