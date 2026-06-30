@@ -44,6 +44,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -631,18 +632,43 @@ export default function LandingPage() {
             </div>
 
             <GlassCard>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-4" action={async (formData) => {
+                const name = formData.get("name") as string;
+                const email = formData.get("email") as string;
+                const message = formData.get("message") as string;
+                
+                if (!name || !email || !message) {
+                  toast.error("Please fill out all fields.");
+                  return;
+                }
+                
+                const { submitContactForm } = await import("@/app/actions/contact");
+                const result = await submitContactForm({
+                  name,
+                  email,
+                  subject: "Landing Page Inquiry",
+                  message,
+                });
+                
+                if (result.success) {
+                  toast.success(result.message);
+                } else {
+                  toast.error(result.error);
+                }
+              }}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="contact-name">Name</Label>
-                    <Input id="contact-name" placeholder="Your name" />
+                    <Input id="contact-name" name="name" placeholder="Your name" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="contact-email">Email</Label>
                     <Input
                       id="contact-email"
+                      name="email"
                       type="email"
                       placeholder="you@company.com"
+                      required
                     />
                   </div>
                 </div>
@@ -650,8 +676,10 @@ export default function LandingPage() {
                   <Label htmlFor="contact-message">Message</Label>
                   <Textarea
                     id="contact-message"
+                    name="message"
                     placeholder="Tell us about your textile analysis needs..."
                     rows={4}
+                    required
                   />
                 </div>
                 <Button
