@@ -8,10 +8,10 @@ import {
   Trash2,
   Eye,
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
+import { useInView } from "react-intersection-observer";
 import { getUserHistory, deleteUserHistory } from "@/app/actions/history";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,9 +45,16 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<keyof HistoryItem>("uploadDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visiblePages, setVisiblePages] = useState(1);
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (inView) {
+      setVisiblePages((prev) => prev + 1);
+    }
+  }, [inView]);
 
   useEffect(() => {
     async function loadData() {
@@ -96,11 +103,11 @@ export default function HistoryPage() {
     return filtered;
   }, [searchQuery, sortField, sortDir, historyData]);
 
-  const totalPages = Math.ceil(filteredHistory.length / ITEMS_PER_PAGE);
-  const paginatedHistory = filteredHistory.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+  const displayedHistory = filteredHistory.slice(
+    0,
+    visiblePages * ITEMS_PER_PAGE
   );
+  const hasMore = displayedHistory.length < filteredHistory.length;
 
   const toggleSort = (field: keyof HistoryItem) => {
     if (sortField === field) {
@@ -140,7 +147,7 @@ export default function HistoryPage() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setCurrentPage(1);
+                setVisiblePages(1);
               }}
             />
           </div>
@@ -198,7 +205,7 @@ export default function HistoryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedHistory.map((item, i) => (
+              {displayedHistory.map((item, i) => (
                 <motion.tr
                   key={item.id}
                   initial={{ opacity: 0 }}
@@ -236,14 +243,15 @@ export default function HistoryPage() {
                               <Eye className="w-4 h-4" />
                             </Button>
                           </Link>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => window.print()}
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
+                          <Link href={`/dashboard/results/${item.id}`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          </Link>
                         </>
                       )}
                       <Button
@@ -261,45 +269,20 @@ export default function HistoryPage() {
             </TableBody>
           </Table>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between px-6 py-4 border-t border-border">
-            <p className="text-xs text-muted-foreground">
-              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
-              {Math.min(currentPage * ITEMS_PER_PAGE, filteredHistory.length)} of{" "}
-              {filteredHistory.length}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <Button
-                  key={i}
-                  variant={currentPage === i + 1 ? "default" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setCurrentPage(i + 1)}
-                >
-                  {i + 1}
-                </Button>
-              ))}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
+          {/* Infinite Scroll Trigger */}
+          {hasMore && (
+            <div
+              ref={ref}
+              className="flex items-center justify-center py-6 text-muted-foreground"
+            >
+              <Loader2 className="w-5 h-5 animate-spin" />
             </div>
-          </div>
+          )}
+          {!hasMore && displayedHistory.length > 0 && (
+            <div className="flex items-center justify-center py-6 text-xs text-muted-foreground">
+              End of history
+            </div>
+          )}
         </GlassCard>
       </div>
     </DashboardLayout>

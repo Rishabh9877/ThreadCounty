@@ -15,22 +15,7 @@ interface Message {
   timestamp: Date;
 }
 
-const botResponses: Record<string, string> = {
-  hello: "Hello! I'm ThreadCounty's AI assistant. I can help you with fabric analysis, account questions, or technical support. What can I help you with?",
-  help: "I can help with:\n• Understanding your analysis results\n• Tips for better image uploads\n• Account and billing questions\n• Technical support\n\nJust ask me anything!",
-  density: "Thread density is measured in threads per centimeter (threads/cm). Higher density typically indicates finer, more tightly woven fabric. Our AI can detect densities ranging from 50 to 400+ threads/cm.",
-  upload: "For the best analysis results:\n• Use images at 300+ DPI\n• Ensure even lighting\n• Photograph fabric flat\n• Avoid wrinkles and folds\n• JPG, JPEG, or PNG format\n• Maximum 5MB file size",
-  pricing: "We offer 4 plans:\n• Free: 5 uploads/month\n• Student: $9/month (50 uploads)\n• Professional: $29/month (unlimited)\n• Enterprise: Custom pricing\n\nVisit /pricing for full details!",
-  accuracy: "Our AI model achieves 99.2% accuracy on standard fabric types. The model was trained on 500,000+ labeled textile samples across 50+ fabric categories.",
-};
-
-function getBotResponse(message: string): string {
-  const lower = message.toLowerCase();
-  for (const [key, response] of Object.entries(botResponses)) {
-    if (lower.includes(key)) return response;
-  }
-  return "Thanks for your question! For detailed assistance, please visit our FAQ page or contact support@threadcounty.ai. I'm here to help with fabric analysis, uploads, pricing, or account questions.";
-}
+// Bot responses and getBotResponse removed to use real Gemini API
 
 export function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -44,13 +29,15 @@ export function AIChatbot() {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    scrollToBottom();
+  }, [messages, isTyping]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -66,18 +53,40 @@ export function AIChatbot() {
     setInput("");
     setIsTyping(true);
 
-    // Simulate typing delay
-    await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 800));
+    // Call Gemini API
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [...messages, userMessage] }),
+      });
 
-    const botMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: getBotResponse(userMessage.content),
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, botMessage]);
-    setIsTyping(false);
+      if (!response.ok) throw new Error("API Error");
+      
+      const data = await response.json();
+      
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.text || "Sorry, I am having trouble connecting to the server.",
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error("Chat error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again later.",
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (
@@ -180,6 +189,7 @@ export function AIChatbot() {
                     </div>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
