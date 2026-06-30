@@ -175,6 +175,10 @@ All database and storage operations are handled securely via Next.js Server Acti
 
 ---
 
+
+
+note: admin can be enabled from supabase by changing role from user to admin then on site changing from dashboard to admin in url
+
 ## 💻 Getting Started (Local Development)
 
 1. **Clone the repository**:
