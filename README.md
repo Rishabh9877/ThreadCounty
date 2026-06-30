@@ -1,4 +1,4 @@
-# 🧵 ThreadCounty
+# 🧵 ThreadCounty AI Platform
 
 > **AI-Powered Textile Intelligence Platform**
 > 
@@ -6,83 +6,202 @@
 
 ---
 
-## 🚀 Live Demo & Deployment
-Deployed on Vercel: [threadcounty.vercel.app](https://threadcounty.vercel.app) *(Replace with your live URL)*
+## 🚀 Live Demo & Repository
+- **Live Hosted Website**: [thread-county-seven.vercel.app](https://thread-county-seven.vercel.app/)
+- **GitHub Repository**: [Rishabh9877/ThreadCounty](https://github.com/Rishabh9877/ThreadCounty)
 
 ---
 
-## 🌟 Key Features
+## 🌟 Comprehensive Feature List
 
-*   **Apple-Inspired 3D Scrollytelling**: A highly optimized particle scene that morphs a single fiber into woven fabric, then zooms into microscopic warp/weft structures, and resolves into an AI brain. Offloaded entirely to GPU Custom Shaders (`ShaderMaterial`) to guarantee a locked 60 FPS scrolling experience.
-*   **AI-Powered Fabric Classification**: Upload fabric images to run computer vision models measuring thread density and identifying weave types (Cotton, Denim, Twill, Satin, Linen) with precision metrics.
-*   **Comprehensive QC Dashboard**: A central interface to track scanned history, compare scans side-by-side, analyze thread count progression graphs, and download detailed PDF quality reports.
-*   **Mobile Optimized**: Device-aware rendering completely bypasses heavy WebGL rendering on mobile displays to preserve battery life, falling back to rich CSS animations while preserving a high-performance experience on desktops.
-*   **Database & Secure Auth**: Fully structured backend powered by Supabase PostgreSQL and Prisma ORM, utilizing secure Row Level Security (RLS) and persistent session authentication.
+ThreadCounty is packed with modern, production-grade features designed for both desktop and mobile web experiences:
+
+1. **Apple-Inspired 3D Scrollytelling (Landing Page)**
+   - Custom WebGL/Three.js particle shaders.
+   - Cinematic camera transitions synchronized with GSAP scroll triggers.
+   - GPU-accelerated rendering locked at 60 FPS.
+
+2. **AI Computer Vision Fabric Analysis**
+   - Direct integration with Google Gemini 2.5 Flash for high-speed multi-modal analysis.
+   - Calculates Thread Density (Threads per square inch).
+   - Identifies Warp and Weft counts from microscopic imagery.
+   - Classifies fabric patterns (e.g., Twill, Denim, Cotton, Satin, Linen).
+   - Generates confidence scores and detailed AI-driven quality insights.
+
+3. **Intelligent AI Chatbot**
+   - Real-time chatbot utilizing Gemini 2.5 Flash.
+   - Context-aware support for questions regarding fabric analysis, platform pricing, and best practices.
+   - Native auto-scrolling with custom UI scrollbar mapping.
+
+4. **Progressive Web App (PWA) Support**
+   - Offline support via Service Workers.
+   - Installable on iOS/Android homescreens for a native app-like experience.
+
+5. **Comprehensive QC Dashboard**
+   - Grid-based history view of all previous scans with infinite scrolling & lazy loading.
+   - Side-by-side Fabric Comparison Tool to analyze two scans simultaneously.
+   - Secure PDF Generation for downloading detailed QC reports.
+   - Account Profile management and Statistics aggregation.
+
+6. **Authentication & Role Management**
+   - Supabase secure Email/Password authentication.
+   - Role-based Access Control (RBAC): Differentiates between standard `USER` and `ADMIN` roles.
+   - Server-Side Rendering (SSR) session validation via secure HttpOnly cookies.
+
+7. **Bonus System Features**
+   - Multi-language Support routing structures.
+   - Real-time Notifications system (Database schemas ready for WebSocket broadcast).
+   - Dynamic Pricing pages and interactive Contact Forms.
+   - Glassmorphism UI with framer-motion micro-animations.
 
 ---
 
 ## 🛠️ Technology Stack
 
-*   **Core Framework**: Next.js 14 (App Router) + React
-*   **3D Graphics**: Three.js, React Three Fiber, Custom GLSL Vertex/Fragment Shaders
-*   **Animations**: GSAP (GreenSock), Framer Motion, Lenis (Smooth Scroll)
-*   **Styling**: Tailwind CSS + Shadcn UI + Vanilla CSS (Glassmorphism)
-*   **Database & ORM**: Prisma Client + Supabase (PostgreSQL)
-*   **Auth & Storage**: Supabase Auth + Supabase Storage
+This project strictly adheres to a modern, high-performance tech stack:
+
+### Frontend
+*   **React.js & Next.js 14** (App Router architecture)
+*   **TypeScript** (Strict Type Safety)
+*   **Tailwind CSS** (Utility-first Styling)
+*   **Framer Motion & GSAP** (Micro-interactions & Layout Animations)
+*   **ShadCN UI** (Accessible Component Primitives)
+*   **Three.js & React Three Fiber** (3D WebGL scenes)
+
+### Backend & AI
+*   **Node.js / Vercel Edge** (Next API Routes & Server Actions)
+*   **Python** (AI Model structural equivalents)
+*   **Google Gemini 2.5 Flash** (Computer Vision & NLP AI processing)
+
+### Database & Auth
+*   **Supabase** (PostgreSQL)
+*   **Supabase Auth** (SSR & Middleware integration)
+*   **Prisma ORM** (Database schema definition, queries, and migrations)
+
+### Deployment & Version Control
+*   **Vercel** (Primary Edge Deployment, officially recommended)
+*   *Compatible with Netlify, Render, and Railway*
+*   **Git & GitHub** (Version Control)
 
 ---
 
-## 💻 Getting Started
+## 🏗️ Architecture Overview
 
-### 📋 Prerequisites
-Ensure you have the following installed:
-*   [Node.js](https://nodejs.org/) (v18.x or higher)
-*   [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
-*   A [Supabase](https://supabase.com/) Account (Free tier is perfect)
+The architecture follows a strictly decoupled Server-less model:
 
-### ⚙️ Installation & Setup
-
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/your-username/threadcounty.git
-    cd threadcounty
-    ```
-
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
-
-3.  **Configure Environment Variables**:
-    Create a `.env` file in the root directory and populate it with your Supabase credentials:
-    ```env
-    # Supabase Connection (Prisma)
-    DATABASE_URL="your-supabase-postgres-connection-string"
-    DIRECT_URL="your-supabase-postgres-direct-connection-string"
-
-    # Supabase Client Authentication
-    NEXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
-    NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
-    ```
-
-4.  **Sync your Database Schema**:
-    Push the Prisma schema to your Supabase instance:
-    ```bash
-    npx prisma db push
-    ```
-
-5.  **Run the local development server**:
-    ```bash
-    npm run dev
-    ```
-    Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Client Layer**: Next.js React Server Components (RSC) pass data down to Client Components. Heavy 3D rendering is conditionally disabled on mobile devices to save battery, falling back to CSS animations.
+- **API / RPC Layer**: Direct database queries are executed entirely server-side via Next.js Server Actions (Remote Procedure Calls). Client-side components never expose SQL or database credentials.
+- **AI Processing Layer**: Image URLs uploaded to Supabase Storage are securely piped from the backend to the Google Gemini API. The AI model returns heavily structured JSON data which is then parsed, validated, and saved into the PostgreSQL database using Prisma.
+- **Security Layer**: All routes nested under `/dashboard` are protected by a Next.js Edge Middleware that intercepts requests and validates the Supabase Auth session token before rendering.
 
 ---
 
-## 🏗️ Production Deployment
+## 🗄️ Database Schema
 
-This project is fully ready for deployment on **Vercel**:
+ThreadCounty uses a PostgreSQL database with Prisma ORM. Below is the Entity-Relationship breakdown:
 
-1.  Connect your GitHub repository to Vercel.
-2.  Import your environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`) under the Project Settings.
-3.  Vercel will build and deploy the app automatically!
+### `User`
+Core authentication and identity model.
+- `id` (String, UUID)
+- `name` (String?), `email` (String?, Unique), `image` (String?)
+- `role` (Role Enum: `USER`, `ADMIN`)
+- `createdAt` / `updatedAt` (DateTime)
+
+### `Profile`
+Extended user information.
+- `id` (String, CUID), `userId` (String, Unique, FK to User)
+- `bio`, `company`, `jobTitle`, `phone` (String?)
+
+### `Upload`
+Records of images uploaded for fabric analysis.
+- `id` (String, CUID), `userId` (String, FK to User)
+- `fileName` (String), `fileUrl` (String, Supabase Storage)
+- `fileSize` (Int), `fileType` (String)
+
+### `Report`
+AI-generated analysis results linked to an upload.
+- `id` (String, CUID), `uploadId` (String, Unique, FK to Upload), `userId` (String)
+- `threadDensity`, `fabricType`, `aiSuggestions` (String?)
+- `warpCount`, `weftCount` (Int?)
+- `confidence` (Float?)
+
+### `Subscription`
+Billing and subscription status.
+- `id` (String, CUID), `userId` (String, FK to User)
+- `planId` (String), `status` (String), `currentPeriodEnd` (DateTime?)
+
+### `ContactMessage`
+Support and contact form submissions.
+- `id` (String, CUID), `name`, `email`, `message` (String)
+- `status` (String: "UNREAD", "READ", "RESOLVED")
+
+### `Notification` & `SecurityLog`
+- **Notification**: `id`, `userId`, `title`, `message`, `read` (Boolean)
+- **SecurityLog**: `id`, `userId`, `action`, `ipAddress`, `userAgent`
+
+---
+
+## 🔌 API Documentation
+
+### 🤖 AI Endpoints
+
+#### `POST /api/chat`
+**Description**: Handles conversations with the ThreadCounty AI Assistant using Google's Gemini 2.5 Flash model.
+**Headers**: `Content-Type: application/json`
+**Request Body**:
+```json
+{
+  "messages": [
+    { "role": "user", "content": "How does fabric analysis work?" }
+  ]
+}
+```
+**Response (200 OK)**:
+```json
+{
+  "text": "Fabric analysis works by analyzing high-resolution images..."
+}
+```
+
+### ⚡ Server Actions (Internal API)
+All database and storage operations are handled securely via Next.js Server Actions, preventing direct exposure of the database to the client.
+
+- **`uploadFabricImage(formData: FormData)`**: Uploads a fabric image to Supabase Storage. Returns the secure `fileUrl`.
+- **`analyzeFabricImage(fileUrl: string)`**: Sends the image URL to Gemini 2.5 Flash for computer vision analysis, extracting thread density, warp/weft counts, and fabric type. Returns the structured JSON payload.
+- **`getDashboardStats()`**: Retrieves aggregate statistics for the current user (total scans, average confidence, recent trends).
+- **`getRecentScans(limit?: number)`**: Fetches the user's latest fabric analysis reports.
+- **`getScanById(id: string)`**: Fetches a detailed report for a specific scan ID.
+- **`compareScans(id1: string, id2: string)`**: Retrieves two scans side-by-side for comparison.
+
+---
+
+## 💻 Getting Started (Local Development)
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Rishabh9877/ThreadCounty.git
+   cd ThreadCounty
+   ```
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+3. **Environment Variables (`.env.local`)**:
+   ```env
+   # Supabase DB
+   DATABASE_URL="your-supabase-postgres-connection-string"
+   DIRECT_URL="your-supabase-postgres-direct-connection-string"
+   # Supabase Auth
+   NEXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+   # AI
+   GEMINI_API_KEY="your-google-gemini-api-key"
+   ```
+4. **Sync Database Schema**:
+   ```bash
+   npx prisma db push
+   ```
+5. **Run the server**:
+   ```bash
+   npm run dev
+   ```
