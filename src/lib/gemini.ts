@@ -1,8 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Ensure the API key is available
-const apiKey = process.env.GEMINI_API_KEY || "";
-const genAI = new GoogleGenerativeAI(apiKey);
+// Instantiation moved inside the function
 
 export interface FabricAnalysisResult {
   threadDensity: string;
@@ -18,10 +16,13 @@ export interface FabricAnalysisResult {
  * Requires the image to be fetched as a buffer or base64.
  */
 export async function analyzeFabricImage(imageUrl: string): Promise<FabricAnalysisResult | null> {
+  const apiKey = process.env.GEMINI_API_KEY || "";
   if (!apiKey) {
     console.error("GEMINI_API_KEY is not configured.");
     return null;
   }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
 
   try {
     // 1. Fetch the image from the URL (Supabase Storage)

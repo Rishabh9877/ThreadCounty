@@ -1,16 +1,19 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-const apiKey = process.env.GEMINI_API_KEY || "";
-const genAI = new GoogleGenerativeAI(apiKey);
+// API key will be read inside the request handler
 
 export async function POST(req: Request) {
+  const apiKey = process.env.GEMINI_API_KEY || "";
+  
   if (!apiKey) {
     return NextResponse.json(
       { error: "GEMINI_API_KEY is not configured" },
       { status: 500 }
     );
   }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
 
   try {
     const { messages } = await req.json();

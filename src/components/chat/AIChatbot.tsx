@@ -138,8 +138,8 @@ export function AIChatbot() {
               </Button>
             </div>
 
-            {/* Messages */}
-            <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef}>
+            {/* Messages Area - Changed to standard div to fix scrolling */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div className="space-y-4">
                 {messages.map((msg) => (
                   <div
@@ -191,7 +191,7 @@ export function AIChatbot() {
                 )}
                 <div ref={messagesEndRef} />
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Input */}
             <div className="px-4 py-3 border-t border-border">
