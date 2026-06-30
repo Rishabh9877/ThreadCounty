@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { prisma } from "@/lib/prisma";
 
 // Check if user is admin
 async function requireAdmin() {
@@ -10,8 +9,14 @@ async function requireAdmin() {
 
   if (!user) throw new Error("Unauthorized");
 
-  const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-  if (!dbUser || dbUser.role !== "ADMIN") {
+  // Use Supabase directly to bypass Prisma connection issues
+  const { data: dbUser, error } = await supabase
+    .from("User")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !dbUser || dbUser.role !== "ADMIN") {
     throw new Error("Forbidden: Admin access required");
   }
 
@@ -20,77 +25,83 @@ async function requireAdmin() {
 
 export async function getAdminMetrics() {
   await requireAdmin();
+  const supabase = await createClient();
 
-  const [totalUsers, totalUploads, activeSubscriptions] = await Promise.all([
-    prisma.user.count(),
-    prisma.upload.count(),
-    prisma.subscription.count({ where: { status: "active" } }),
+  const [
+    { count: totalUsers },
+    { count: totalUploads },
+    { count: activeSubscriptions }
+  ] = await Promise.all([
+    supabase.from("User").select("*", { count: "exact", head: true }),
+    supabase.from("Upload").select("*", { count: "exact", head: true }),
+    supabase.from("Subscription").select("*", { count: "exact", head: true }).eq("status", "active"),
   ]);
 
   return {
-    totalUsers,
-    totalUploads,
-    activeSubscriptions,
+    totalUsers: totalUsers || 0,
+    totalUploads: totalUploads || 0,
+    activeSubscriptions: activeSubscriptions || 0,
     systemHealth: "99.9%", // Mocked for demo
   };
 }
 
 export async function getAdminUsers() {
   await requireAdmin();
+  const supabase = await createClient();
 
-  const users = await prisma.user.findMany({
-    include: {
-      subscriptions: {
-        where: { status: "active" },
-        take: 1,
-      },
-      _count: {
-        select: { uploads: true }
-      }
-    },
-    orderBy: { createdAt: "desc" }
-  });
+  // Fetch users with their subscriptions and uploads
+  const { data: users } = await supabase
+    .from("User")
+    .select(`
+      id, email, name, role, created_at,
+      Subscription ( planId, status ),
+      Upload ( id )
+    `)
+    .order("created_at", { ascending: false })
+    .limit(20);
 
-  return users.map(user => ({
+  if (!users) return [];
+
+  return users.map((user: any) => ({
     id: user.id,
     email: user.email,
     name: user.name || "Unknown User",
-    plan: user.subscriptions[0]?.planId || "Free",
-    uploads: user._count.uploads,
+    plan: user.Subscription?.find((s: any) => s.status === "active")?.planId || "Free",
+    uploads: user.Upload?.length || 0,
     role: user.role.toLowerCase(),
-    joinDate: user.createdAt.toISOString().split("T")[0],
+    joinDate: new Date(user.created_at).toISOString().split("T")[0],
   }));
 }
 
 export async function getModerationQueue() {
   await requireAdmin();
+  const supabase = await createClient();
 
-  // Fetch uploads with low confidence for moderation
-  const uploads = await prisma.upload.findMany({
-    where: {
-      report: {
-        confidence: { lt: 80 }
-      }
-    },
-    include: {
-      user: true,
-      report: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: 10,
-  });
+  const { data: uploads } = await supabase
+    .from("Upload")
+    .select(`
+      id, fileName, created_at,
+      User ( email, name ),
+      Report !inner ( confidence )
+    `)
+    .lt("Report.confidence", 80)
+    .order("created_at", { ascending: false })
+    .limit(10);
 
-  return uploads.map(upload => ({
+  if (!uploads) return [];
+
+  return uploads.map((upload: any) => ({
     id: upload.id,
     fileName: upload.fileName,
-    user: upload.user.email || upload.user.name || "Unknown User",
-    reason: `Low AI Confidence (${upload.report?.confidence?.toFixed(1) || 0}%)`,
-    date: upload.createdAt.toISOString().split("T")[0],
+    user: upload.User?.email || upload.User?.name || "Unknown User",
+    reason: `Low AI Confidence (${upload.Report[0]?.confidence?.toFixed(1) || 0}%)`,
+    date: new Date(upload.created_at).toISOString().split("T")[0],
   }));
 }
 
 export async function deleteUpload(uploadId: string) {
   await requireAdmin();
-  await prisma.upload.delete({ where: { id: uploadId } });
+  const supabase = await createClient();
+  await supabase.from("Upload").delete().eq("id", uploadId);
   return { success: true };
 }
