@@ -10,6 +10,7 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@prisma/client", "bcryptjs"],
   typescript: { ignoreBuildErrors: true },
+  turbopack: {},
 };
 
 export default withPWA(nextConfig);
