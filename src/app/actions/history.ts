@@ -36,6 +36,21 @@ export async function getUserHistory() {
     date: upload.createdAt.toISOString(),
     status: upload.report ? "Completed" : "Processing", // simple derived status
     fabricType: upload.report?.fabricType || "Analyzing...",
+    threadDensity: upload.report?.threadDensity ? parseInt(upload.report.threadDensity) : 0,
     accuracy: upload.report?.confidence ? `${(upload.report.confidence * 100).toFixed(1)}%` : "N/A",
   }));
+}
+
+export async function deleteUserHistory(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+  
+  const upload = await prisma.upload.findUnique({ where: { id } });
+  if (!upload || upload.userId !== user.id) {
+    throw new Error("Not found or unauthorized");
+  }
+  
+  await prisma.upload.delete({ where: { id } });
+  return { success: true };
 }

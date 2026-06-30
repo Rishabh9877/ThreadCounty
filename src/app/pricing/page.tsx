@@ -108,6 +108,24 @@ const plans = [
 
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<string | null>(null);
+
+  const handleSubscribe = async (planName: string) => {
+    setIsSubmitting(planName);
+    try {
+      const { updateSubscription } = await import("@/app/actions/subscription");
+      const result = await updateSubscription(planName, isAnnual);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("An error occurred during subscription.");
+    } finally {
+      setIsSubmitting(null);
+    }
+  };
 
   return (
     <div className="relative min-h-screen">
@@ -231,11 +249,10 @@ export default function PricingPage() {
                         : "glass"
                     )}
                     variant={plan.popular ? "default" : "outline"}
-                    onClick={() =>
-                      toast.success(`${plan.name} plan selected!`)
-                    }
+                    onClick={() => handleSubscribe(plan.name)}
+                    disabled={isSubmitting === plan.name}
                   >
-                    {plan.cta}
+                    {isSubmitting === plan.name ? "Processing..." : plan.cta}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </GlassCard>

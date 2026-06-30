@@ -96,9 +96,6 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} ThreadCounty. All rights reserved.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Crafted with AI & Computer Vision Technology
-          </p>
         </div>
       </div>
     </footer>

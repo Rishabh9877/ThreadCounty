@@ -1,33 +1,83 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { GitCompare, ArrowRight } from "lucide-react";
+import { GitCompare, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GradientText } from "@/components/ui/GradientText";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
-
-const compareSamples = [
-  { id: "a1b2c3d4", name: "Cotton-Blend-Sample-A.jpg", type: "Cotton", density: 186, warp: 102, weft: 84, confidence: 97.2 },
-  { id: "e5f6g7h8", name: "Denim-Production-Batch-12.png", type: "Denim", density: 234, warp: 140, weft: 94, confidence: 95.8 },
-];
+import { getCompareData } from "@/app/actions/compare";
+import { toast } from "sonner";
+import Link from "next/link";
 
 export default function ComparePage() {
+  const [loading, setLoading] = useState(true);
+  const [compareSamples, setCompareSamples] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const result = await getCompareData();
+        if (result.success) {
+          setCompareSamples(result.samples!);
+        } else {
+          setError(result.error!);
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to load comparison data.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error || compareSamples.length < 2) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
+          <GitCompare className="w-16 h-16 text-muted-foreground/50 mb-4" />
+          <h2 className="text-2xl font-bold font-heading">Not Enough Data</h2>
+          <p className="text-muted-foreground max-w-md">
+            {error || "You need to analyze at least two images to use the comparison feature."}
+          </p>
+          <Link href="/dashboard/upload">
+            <Button className="mt-4 bg-gradient-to-r from-neon-indigo to-primary text-white">
+              Upload New Image
+            </Button>
+          </Link>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
         <SectionHeading
           title="Fabric Comparison"
-          description="Compare thread analysis results side by side to identify differences and quality variations."
+          description="Compare your two most recent analysis results side by side."
           align="left"
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {compareSamples.map((sample, i) => (
             <motion.div
-              key={i}
+              key={sample.id}
               initial={{ opacity: 0, x: i === 0 ? -20 : 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.15 }}
@@ -83,20 +133,20 @@ export default function ComparePage() {
             <div className="text-center">
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Density Δ</p>
               <p className="text-xl font-bold text-amber-500">
-                +{Math.abs(compareSamples[0].density - compareSamples[1].density)}
+                {Math.abs(compareSamples[0].density - compareSamples[1].density)}
               </p>
               <p className="text-xs text-muted-foreground">threads/cm</p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Warp Δ</p>
               <p className="text-xl font-bold text-neon-indigo">
-                +{Math.abs(compareSamples[0].warp - compareSamples[1].warp)}
+                {Math.abs(compareSamples[0].warp - compareSamples[1].warp)}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Weft Δ</p>
               <p className="text-xl font-bold text-aurora-emerald">
-                +{Math.abs(compareSamples[0].weft - compareSamples[1].weft)}
+                {Math.abs(compareSamples[0].weft - compareSamples[1].weft)}
               </p>
             </div>
             <div className="text-center">

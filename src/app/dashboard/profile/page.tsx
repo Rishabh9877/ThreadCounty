@@ -32,7 +32,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSupabase } from "@/providers/SupabaseProvider";
 import { toast } from "sonner";
-import { getSecurityLogs, logSecurityAction } from "@/app/actions/profile";
+import { getSecurityLogs, logSecurityAction, updateProfileName } from "@/app/actions/profile";
 
 interface SecurityLogEntry {
   id: string;
@@ -69,6 +69,13 @@ export default function ProfilePage() {
   useEffect(() => {
     loadSecurityLogs();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setFullName(user.user_metadata?.name || "");
+      setProfileImage(user.user_metadata?.avatar_url || "");
+    }
+  }, [user]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -114,6 +121,10 @@ export default function ProfilePage() {
         }
       });
       if (error) throw error;
+      
+      // Update Prisma Database
+      await updateProfileName(fullName);
+      
       toast.success("Profile updated successfully!");
       await logSecurityAction("Profile updated");
       loadSecurityLogs();

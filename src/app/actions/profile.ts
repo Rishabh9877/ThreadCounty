@@ -54,3 +54,24 @@ export async function logSecurityAction(action: string, ipAddress: string = "192
     },
   });
 }
+
+export async function updateProfileName(name: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  await prisma.user.upsert({
+    where: { id: user.id },
+    update: { name },
+    create: {
+      id: user.id,
+      email: user.email || "",
+      name,
+    }
+  });
+  
+  return { success: true };
+}

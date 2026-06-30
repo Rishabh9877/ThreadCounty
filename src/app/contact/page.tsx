@@ -31,6 +31,7 @@ const socialLinks = [
 export default function ContactPage() {
   const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -44,11 +45,26 @@ export default function ContactPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    toast.success("Message sent successfully! We'll respond within 24 hours.");
-    setFormData({ name: "", email: "", subject: "", message: "" });
+    
+    setIsSubmitting(true);
+    try {
+      const { submitContactForm } = await import("@/app/actions/contact");
+      const result = await submitContactForm(formData);
+      
+      if (result.success) {
+        toast.success(result.message || "Message sent successfully! We'll respond within 24 hours.");
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        toast.error(result.error || "Failed to send message");
+      }
+    } catch (error) {
+      toast.error("Failed to send message");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -137,9 +153,9 @@ export default function ContactPage() {
                     <Textarea id="contact-message" placeholder="Tell us how we can help..." rows={5} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className={errors.message ? "border-destructive" : ""} />
                     {errors.message && <p className="text-xs text-destructive">{errors.message}</p>}
                   </div>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-neon-indigo to-primary text-white gap-2">
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-neon-indigo to-primary text-white gap-2">
                     <Send className="w-4 h-4" />
-                    Send Message
+                    {isSubmitting ? "Sending..." : "Send Message"}
                   </Button>
                 </form>
               </GlassCard>

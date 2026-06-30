@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Users, Upload, Shield, TrendingUp, Eye, Trash2, Edit, BarChart3 } from "lucide-react";
+import { Users, Upload, Shield, TrendingUp, Eye, Trash2, Edit, BarChart3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,28 +12,63 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-
-const adminMetrics = [
-  { title: "Total Users", value: "2,847", change: "+124 this month", icon: Users, color: "text-neon-indigo", bg: "bg-neon-indigo/10" },
-  { title: "Total Uploads", value: "18,293", change: "+2,340 this month", icon: Upload, color: "text-aurora-emerald", bg: "bg-aurora-emerald/10" },
-  { title: "Active Subscriptions", value: "1,204", change: "+89 this month", icon: TrendingUp, color: "text-amber-500", bg: "bg-amber-500/10" },
-  { title: "System Health", value: "99.9%", change: "Uptime last 30 days", icon: Shield, color: "text-cyan-500", bg: "bg-cyan-500/10" },
-];
-
-const mockUsers = [
-  { id: "1", email: "sarah@mit.edu", name: "Dr. Sarah Chen", plan: "Professional", uploads: 342, role: "user", joinDate: "2025-03-15" },
-  { id: "2", email: "rajesh@arvind.com", name: "Rajesh Patel", plan: "Enterprise", uploads: 1204, role: "user", joinDate: "2024-11-20" },
-  { id: "3", email: "emma@parsons.edu", name: "Emma Williams", plan: "Student", uploads: 78, role: "user", joinDate: "2025-08-01" },
-  { id: "4", email: "admin@threadcounty.ai", name: "Admin Account", plan: "Enterprise", uploads: 0, role: "admin", joinDate: "2024-01-01" },
-  { id: "5", email: "john@textilecorp.com", name: "John Smith", plan: "Free", uploads: 5, role: "user", joinDate: "2026-06-20" },
-];
-
-const moderationQueue = [
-  { id: "m1", fileName: "suspicious-upload-1.jpg", user: "unknown@temp.com", reason: "Potential non-fabric content", date: "2026-06-28" },
-  { id: "m2", fileName: "blurry-scan-test.png", user: "test@test.com", reason: "Low quality / spam", date: "2026-06-27" },
-];
+import { getAdminMetrics, getAdminUsers, getModerationQueue, deleteUpload } from "@/app/actions/admin";
 
 export default function AdminPage() {
+  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
+  const [queue, setQueue] = useState<any[]>([]);
+
+  const loadData = async () => {
+    try {
+      const [m, u, q] = await Promise.all([
+        getAdminMetrics(),
+        getAdminUsers(),
+        getModerationQueue()
+      ]);
+      setMetrics(m);
+      setUsers(u);
+      setQueue(q);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load admin data. You might not have permission.");
+      window.location.href = "/dashboard";
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleDeleteUpload = async (id: string) => {
+    try {
+      await deleteUpload(id);
+      toast.success("Content removed");
+      loadData(); // Refresh
+    } catch (e) {
+      toast.error("Failed to remove content");
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const adminMetricsData = [
+    { title: "Total Users", value: metrics?.totalUsers || "0", change: "Registered users", icon: Users, color: "text-neon-indigo", bg: "bg-neon-indigo/10" },
+    { title: "Total Uploads", value: metrics?.totalUploads || "0", change: "Total images", icon: Upload, color: "text-aurora-emerald", bg: "bg-aurora-emerald/10" },
+    { title: "Active Subscriptions", value: metrics?.activeSubscriptions || "0", change: "Paid users", icon: TrendingUp, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { title: "System Health", value: metrics?.systemHealth || "100%", change: "Uptime last 30 days", icon: Shield, color: "text-cyan-500", bg: "bg-cyan-500/10" },
+  ];
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -40,13 +76,13 @@ export default function AdminPage() {
 
         {/* Admin Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {adminMetrics.map((metric, i) => (
+          {adminMetricsData.map((metric, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
               <GlassCard>
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{metric.title}</p>
-                    <p className="text-2xl font-bold font-heading mt-1"><GradientText>{metric.value}</GradientText></p>
+                    <p className="text-2xl font-bold font-heading mt-1"><GradientText>{metric.value.toString()}</GradientText></p>
                     <p className="text-xs text-muted-foreground mt-1">{metric.change}</p>
                   </div>
                   <div className={`w-10 h-10 rounded-xl ${metric.bg} flex items-center justify-center`}>
@@ -103,7 +139,7 @@ export default function AdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockUsers.map((user) => (
+              {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
                     <div>
@@ -112,7 +148,7 @@ export default function AdminPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={user.plan === "Enterprise" ? "default" : "outline"} className="text-xs">{user.plan}</Badge>
+                    <Badge variant={user.plan === "enterprise" ? "default" : "outline"} className="text-xs capitalize">{user.plan}</Badge>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{user.uploads}</TableCell>
                   <TableCell className="hidden md:table-cell">
@@ -140,7 +176,7 @@ export default function AdminPage() {
           <div className="px-6 py-4 border-b border-border">
             <h2 className="text-lg font-semibold font-heading flex items-center gap-2">
               <Shield className="w-5 h-5" /> Moderation Queue
-              <Badge variant="destructive" className="text-xs">{moderationQueue.length}</Badge>
+              <Badge variant="destructive" className="text-xs">{queue.length}</Badge>
             </h2>
           </div>
           <Table>
@@ -153,7 +189,7 @@ export default function AdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {moderationQueue.map((item) => (
+              {queue.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="text-sm font-medium">{item.fileName}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{item.user}</TableCell>
@@ -163,13 +199,20 @@ export default function AdminPage() {
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast.success("Content approved")}>
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => toast.success("Content removed")}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteUpload(item.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
+              {queue.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    No items in moderation queue
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </GlassCard>

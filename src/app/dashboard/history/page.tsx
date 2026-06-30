@@ -12,7 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
-import { getUserHistory } from "@/app/actions/history";
+import { getUserHistory, deleteUserHistory } from "@/app/actions/history";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +57,7 @@ export default function HistoryPage() {
           id: d.id,
           fileName: d.fileName,
           fabricType: d.fabricType,
-          threadDensity: 0, // Should come from DB
+          threadDensity: d.threadDensity,
           confidence: parseFloat(d.accuracy) || 0,
           uploadDate: new Date(d.date).toLocaleDateString(),
           status: (d.status.toLowerCase() as "completed" | "processing" | "failed"),
@@ -111,8 +111,14 @@ export default function HistoryPage() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    toast.success(`Record ${id} deleted successfully`);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteUserHistory(id);
+      setHistoryData(prev => prev.filter(item => item.id !== id));
+      toast.success("Record deleted successfully");
+    } catch (e) {
+      toast.error("Failed to delete record");
+    }
   };
 
   return (
